@@ -21,7 +21,7 @@ Level.prototype.clone = function () {
 	clone.objects = new Int32Array(this.objects);
 	return clone;
 }
-
+// 返回坐标index对应的id mask。index是列优先展平的坐标
 Level.prototype.getCell = function (index) {
 	return new BitVec(this.objects.subarray(index * STRIDE_OBJ, index * STRIDE_OBJ + STRIDE_OBJ));
 }

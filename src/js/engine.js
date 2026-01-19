@@ -1217,7 +1217,7 @@ function getLayersOfMask(cellMask) {
 	let layers = [];
 	for (let i = 0; i < state.objectCount; i++) {
 		if (cellMask.get(i)) {
-			let n = state.idDict[i];
+			let n = state.idDict[i];	// TODO: 可以预计算一个id=>layer的array简化查询
 			let o = state.objects[n];
 			layers.push(o.layer)
 		}
@@ -1331,6 +1331,7 @@ let seedsToPlay_CanMove = [];
 let seedsToPlay_CantMove = [];
 
 function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
+	// 在resolve阶段调用，尝试对positionIndex位置的layer层进行移动，方向是dirMask
 	let delta = dirMasksDelta[dirMask];
 
 	let dx = delta[0];
@@ -1341,19 +1342,24 @@ function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 	let maxy = level.height - 1;
 
 	if ((tx === 0 && dx < 0) || (tx === maxx && dx > 0) || (ty === 0 && dy < 0) || (ty === maxy && dy > 0)) {
+		// 目标位置出界
 		return false;
 	}
 
 	let targetIndex = (positionIndex + delta[1] + delta[0] * level.height);
 
-	let layerMask = state.layerMasks[layer];
+	let layerMask = state.layerMasks[layer];		// layerMask是layer中所有obj id mask的or组合
 	let targetMask = level.getCellInto(targetIndex, _o7);
 	let sourceMask = level.getCellInto(positionIndex, _o8);
 
+	// 如果目标格子在该层已经有东西了，且如果这不是动作(ACTION)，则无法移动
 	if (layerMask.anyBitsInCommon(targetMask) && (dirMask != 16)) {
 		return false;
 	}
 
+	// TODO: 在这里获取所有即将移动的格子
+	
+	// 声音规则会按照层级拆分，物体有交集 + 层级移动有交集，可以断定声音规则命中
 	for (let i = 0; i < state.sfx_MovementMasks[layer].length; i++) {
 		let o = state.sfx_MovementMasks[layer][i];
 		let objectMask = o.objectMask;
@@ -1367,9 +1373,9 @@ function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 	}
 
 	let movingEntities = sourceMask.clone();
-	sourceMask.iclear(layerMask);
-	movingEntities.iand(layerMask);
-	targetMask.ior(movingEntities);
+	sourceMask.iclear(layerMask);		// 当前层级有关的对象全部清除（按照同层互斥设定，其实最多只清除1个）
+	movingEntities.iand(layerMask);		// 只保留当前层级有关的对象
+	targetMask.ior(movingEntities);		// 并入目标位置的id mask
 
 	level.setCell(positionIndex, sourceMask);
 	level.setCell(targetIndex, targetMask);
@@ -2762,7 +2768,7 @@ function processInput(dir, dontDoWin, dontModify) {
 			}
 			applyRules(state.lateRules, state.lateLoopPoint);
 		}
-	} while (i < 50 && rigidloop);
+	} while (i < 50 && rigidloop);	// 如果不是刚体解体回滚，这里会立刻结束循环
 
 	if (i >= 50) {
 		consolePrint("Looped through 50 times, gave up.  too many loops!");

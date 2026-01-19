@@ -262,6 +262,7 @@ function generateExtraMembers(state) {
     }
     state.synonymsDict = synonymsDict;
 
+    // 扁平化同义词的传导路径
     let modified = true;
     while (modified) {
         modified = false;
@@ -487,6 +488,11 @@ function levelsToArray(state) {
 }
 
 function directionalRule(rule) {
+
+    // 判断一条规则是否依赖匹配方向，依赖匹配方向的规则需要被展开。满足以下条件之一的需要被展开
+    // 1. cellRow里有 | 分割符，即cell数量大于1
+    // 2. lhs的cell使用了相对方向
+    // 3. rhs的cell使用了相对方向
     for (let i = 0; i < rule.lhs.length; i++) {
         let cellRow = rule.lhs[i];
         if (cellRow.length > 1) {
@@ -1803,7 +1809,7 @@ function rulesToMask(state) {
             
             for (let colIndex = 0; colIndex < cellrow_l.length; colIndex++) {
                 const cell_l = cellrow_l[colIndex];
-                const layersUsed_l = [...layerTemplate];
+                const layersUsed_l = [...layerTemplate];    // 数组展开语法，浅拷贝
                 
                 // Initialize bit vectors for the current cell
                 const bitVectors = {
