@@ -68,7 +68,7 @@ function GET(tok, index) {
 BitVec.prototype.getshiftor = function(mask, shift) {
 	const toshift = shift & 31;
 	let ret = this.data[shift>>5] >>> (toshift);
-	if (toshift) {
+	if (toshift > 27) {
 		ret |= this.data[(shift>>5)+1] << (32 - toshift);
 	}
 	return ret & mask;
@@ -77,7 +77,7 @@ BitVec.prototype.getshiftor = function(mask, shift) {
 function GETSHIFTOR(tok, mask, shift) {
     const toshift = shift&31;
     const shift_5 = shift>>5;
-    if (toshift) {
+    if (toshift > 27) {
         return `${mask}&((${tok}.data[${shift_5}] >>> ${toshift}) | (${tok}.data[${shift_5}+1] << (32-${toshift})))`;
     } else {
         return `${mask}&(${tok}.data[${shift_5}] >>> ${toshift})`;
@@ -89,7 +89,7 @@ BitVec.prototype.ishiftor = function(mask, shift) {
 	const shift_5 = shift>>5;
 	let low = mask << toshift;
 	this.data[shift_5] |= low;
-	if (toshift) {
+	if (toshift > 27) {
 		let high = mask >> (32 - toshift);
 		this.data[shift_5+1] |= high;
 	}
@@ -100,7 +100,7 @@ function ISHIFTOR(tok, mask, shift) {
 		let toshift = ${shift}&31;
 		let low = ${mask} << toshift;
 		${tok}.data[${shift}>>5] |= low;
-		if (toshift) {
+		if (toshift > 27) {
 			let high = ${mask} >> (32 - toshift);
 			${tok}.data[(${shift}>>5)+1] |= high;
 		}
@@ -113,7 +113,7 @@ BitVec.prototype.ishiftclear = function(mask, shift) {
 	const shift_5 = shift>>5;
 	const low = mask << toshift;
 	this.data[shift_5] &= ~low;
-	if (toshift){
+	if (toshift > 27){
 		let high = mask >> (32 - (shift & 31));
 		this.data[shift_5+1] &= ~high;
 	}
@@ -125,7 +125,7 @@ function ISHIFTCLEAR(tok, mask, shift) {
 	const shift_5 = shift>>5;
 	const low = mask +"<<"+toshift;
 	let result = `${tok}.data[${shift_5}] &= ~(${low});\n`
-	if (toshift) {
+	if (toshift > 27) {
 		const high = mask +">>>"+(32-toshift);
 		result += `${tok}.data[${shift_5+1}] &= ~(${high});\n`;
 	}
