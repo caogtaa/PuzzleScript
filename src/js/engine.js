@@ -2741,7 +2741,7 @@ function processInput(dir, dontDoWin, dontModify) {
 			level.commandQueueSourceRules = startState.commandQueueSourceRules.concat([]);
 			sfxCreateMask.setZero();
 			sfxDestroyMask.setZero();
-			seedsToPlay_CanMove = [];
+			seedsToPlay_CanMove.length = 0;
 
 			if (verbose_logging && rigidloop && i > 0) {
 				consolePrint('Relooping through rules because of rigid.');
