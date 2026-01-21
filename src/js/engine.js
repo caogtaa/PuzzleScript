@@ -3219,141 +3219,37 @@ if (globalThis.getLayersOfMask === undefined)
     globalThis.getLayersOfMask = getLayersOfMask;
 if (globalThis.repositionEntitiesOnLayer === undefined)
     globalThis.repositionEntitiesOnLayer = repositionEntitiesOnLayer;
-if (!globalThis.hasOwnProperty('_movementVecs')) {
-    Object.defineProperty(globalThis, '_movementVecs', {
-        get: function() { return _movementVecs; },
-        set: function(val) { _movementVecs = val; }
-    });
+
+function defineGlobalThisProperty(name, getValue, setValue) {
+	if (!globalThis.hasOwnProperty(name)) {
+		Object.defineProperty(globalThis, name, {
+			get: getValue,
+			set: setValue
+		});
+	}
 }
-if (!globalThis.hasOwnProperty('_movementVecIndex')) {
-    Object.defineProperty(globalThis, '_movementVecIndex', {
-        get: function() { return _movementVecIndex; },
-        set: function(val) { _movementVecIndex = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('STRIDE_MOV')) {
-    Object.defineProperty(globalThis, 'STRIDE_MOV', {
-        get: function() { return STRIDE_MOV; },
-        set: function(val) { STRIDE_MOV = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('state')) {
-    Object.defineProperty(globalThis, 'state', {
-        get: function() { return state; },
-        set: function(val) { state = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o1')) {
-    Object.defineProperty(globalThis, '_o1', {
-        get: function() { return _o1; },
-        set: function(val) { _o1 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o2')) {
-    Object.defineProperty(globalThis, '_o2', {
-        get: function() { return _o2; },
-        set: function(val) { _o2 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o2_5')) {
-    Object.defineProperty(globalThis, '_o2_5', {
-        get: function() { return _o2_5; },
-        set: function(val) { _o2_5 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o3')) {
-    Object.defineProperty(globalThis, '_o3', {
-        get: function() { return _o3; },
-        set: function(val) { _o3 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o4')) {
-    Object.defineProperty(globalThis, '_o4', {
-        get: function() { return _o4; },
-        set: function(val) { _o4 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o5')) {
-    Object.defineProperty(globalThis, '_o5', {
-        get: function() { return _o5; },
-        set: function(val) { _o5 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o6')) {
-    Object.defineProperty(globalThis, '_o6', {
-        get: function() { return _o6; },
-        set: function(val) { _o6 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o7')) {
-    Object.defineProperty(globalThis, '_o7', {
-        get: function() { return _o7; },
-        set: function(val) { _o7 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o8')) {
-    Object.defineProperty(globalThis, '_o8', {
-        get: function() { return _o8; },
-        set: function(val) { _o8 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o9')) {
-    Object.defineProperty(globalThis, '_o9', {
-        get: function() { return _o9; },
-        set: function(val) { _o9 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o10')) {
-    Object.defineProperty(globalThis, '_o10', {
-        get: function() { return _o10; },
-        set: function(val) { _o10 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o11')) {
-    Object.defineProperty(globalThis, '_o11', {
-        get: function() { return _o11; },
-        set: function(val) { _o11 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_o12')) {
-    Object.defineProperty(globalThis, '_o12', {
-        get: function() { return _o12; },
-        set: function(val) { _o12 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_m1')) {
-    Object.defineProperty(globalThis, '_m1', {
-        get: function() { return _m1; },
-        set: function(val) { _m1 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_m2')) {
-    Object.defineProperty(globalThis, '_m2', {
-        get: function() { return _m2; },
-        set: function(val) { _m2 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('_m3')) {
-    Object.defineProperty(globalThis, '_m3', {
-        get: function() { return _m3; },
-        set: function(val) { _m3 = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('sfxCreateMask')) {
-    Object.defineProperty(globalThis, 'sfxCreateMask', {
-        get: function() { return sfxCreateMask; },
-        set: function(val) { sfxCreateMask = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('sfxDestroyMask')) {
-    Object.defineProperty(globalThis, 'sfxDestroyMask', {
-        get: function() { return sfxDestroyMask; },
-        set: function(val) { sfxDestroyMask = val; }
-    });
-}
-if (!globalThis.hasOwnProperty('verbose_logging')) {
-    Object.defineProperty(globalThis, 'verbose_logging', {
-        get: function() { return verbose_logging; },
-        set: function(val) { verbose_logging = val; }
-    });
-}
+
+// Define all global properties
+defineGlobalThisProperty('_movementVecs', () => _movementVecs, (val) => { _movementVecs = val; });
+defineGlobalThisProperty('_movementVecIndex', () => _movementVecIndex, (val) => { _movementVecIndex = val; });
+defineGlobalThisProperty('STRIDE_MOV', () => STRIDE_MOV, (val) => { STRIDE_MOV = val; });
+defineGlobalThisProperty('state', () => state, (val) => { state = val; });
+defineGlobalThisProperty('_o1', () => _o1, (val) => { _o1 = val; });
+defineGlobalThisProperty('_o2', () => _o2, (val) => { _o2 = val; });
+defineGlobalThisProperty('_o2_5', () => _o2_5, (val) => { _o2_5 = val; });
+defineGlobalThisProperty('_o3', () => _o3, (val) => { _o3 = val; });
+defineGlobalThisProperty('_o4', () => _o4, (val) => { _o4 = val; });
+defineGlobalThisProperty('_o5', () => _o5, (val) => { _o5 = val; });
+defineGlobalThisProperty('_o6', () => _o6, (val) => { _o6 = val; });
+defineGlobalThisProperty('_o7', () => _o7, (val) => { _o7 = val; });
+defineGlobalThisProperty('_o8', () => _o8, (val) => { _o8 = val; });
+defineGlobalThisProperty('_o9', () => _o9, (val) => { _o9 = val; });
+defineGlobalThisProperty('_o10', () => _o10, (val) => { _o10 = val; });
+defineGlobalThisProperty('_o11', () => _o11, (val) => { _o11 = val; });
+defineGlobalThisProperty('_o12', () => _o12, (val) => { _o12 = val; });
+defineGlobalThisProperty('_m1', () => _m1, (val) => { _m1 = val; });
+defineGlobalThisProperty('_m2', () => _m2, (val) => { _m2 = val; });
+defineGlobalThisProperty('_m3', () => _m3, (val) => { _m3 = val; });
+defineGlobalThisProperty('sfxCreateMask', () => sfxCreateMask, (val) => { sfxCreateMask = val; });
+defineGlobalThisProperty('sfxDestroyMask', () => sfxDestroyMask, (val) => { sfxDestroyMask = val; });
+defineGlobalThisProperty('verbose_logging', () => verbose_logging, (val) => { verbose_logging = val; });
