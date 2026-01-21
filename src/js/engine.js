@@ -1,5 +1,11 @@
 'use strict';
 
+if (typeof globalThis === 'undefined') {
+    if (typeof window !== 'undefined') { window.globalThis = window; }
+    else if (typeof self !== 'undefined') { self.globalThis = self; }
+    else if (typeof global !== 'undefined') { globalThis.globalThis = global; }
+}
+
 /*
 ..................................
 .............SOKOBAN..............
@@ -1231,10 +1237,10 @@ function generate_moveEntitiesAtIndex(OBJECT_SIZE, MOVEMENT_SIZE) {
 	const fn = `'use strict';
     let cellMask = level.getCell(positionIndex);
 	${UNROLL("cellMask &= entityMask", OBJECT_SIZE)}
-    let layers = getLayersOfMask(cellMask);
+    let layers = globalThis.getLayersOfMask(cellMask);
 
-	let movementMask=_movementVecs[_movementVecIndex];
-	_movementVecIndex=(_movementVecIndex+1)%_movementVecs.length;
+	let movementMask=globalThis.movementVecs[globalThis.movementVecIndex];
+	globalThis.movementVecIndex = (globalThis.movementVecIndex + 1) % globalThis.movementVecs.length;
 	${LEVEL_GET_MOVEMENTS_INTO( "positionIndex", "movementMask", MOVEMENT_SIZE)}
 
     for (let i=0;i<layers.length;i++) {
@@ -1279,13 +1285,13 @@ function generate_calculateRowColMasks(OBJECT_SIZE, MOVEMENT_SIZE) {
 		for (let i=0;i<level.width;i++) {
 			for (let j=0;j<level.height;j++) {
 				let index = j+i*level.height;
-				let cellContents=_o9;
+				let cellContents=globalThis._o9;
 				${LEVEL_GET_CELL_INTO("level", "index", "cellContents", OBJECT_SIZE)}
 				${UNROLL("level.mapCellContents |= cellContents", OBJECT_SIZE)}
 				${UNROLL("level.rowCellContents[j] |= cellContents", OBJECT_SIZE)}
 				${UNROLL("level.colCellContents[i] |= cellContents", OBJECT_SIZE)}
 				
-				let mapCellContents_Movements=level.getMovementsInto(index,_m1);
+				let mapCellContents_Movements=level.getMovementsInto(index,globalThis._m1);
 				${UNROLL("level.mapCellContents_Movements |= mapCellContents_Movements", MOVEMENT_SIZE)}
 				${UNROLL("level.rowCellContents_Movements[j] |= mapCellContents_Movements", MOVEMENT_SIZE)}
 				${UNROLL("level.colCellContents_Movements[i] |= mapCellContents_Movements", MOVEMENT_SIZE)}
@@ -1401,7 +1407,7 @@ function generate_repositionEntitiesAtCell(OBJECT_SIZE, MOVEMENT_SIZE) {
     ${FOR(0,LAYER_COUNT,layer=>`{
         const layerMovement = ${GETSHIFTOR("movementMask",0x1f, 5*layer)};
         if (layerMovement !== 0) {
-            const thismoved = repositionEntitiesOnLayer(positionIndex, ${layer}, layerMovement);
+            const thismoved = globalThis.repositionEntitiesOnLayer(positionIndex, ${layer}, layerMovement);
             if (thismoved) {
                 ${ISHIFTCLEAR("movementMask","layerMovement", 5*layer)}
                 moved = true;
@@ -1410,7 +1416,7 @@ function generate_repositionEntitiesAtCell(OBJECT_SIZE, MOVEMENT_SIZE) {
 	}`)}
 
 	${FOR(0,MOVEMENT_SIZE,i=>`
-		level.movements[positionIndex * STRIDE_MOV + ${i}] = movementMask.data[${i}];
+		level.movements[positionIndex * globalThis.STRIDE_MOV + ${i}] = movementMask.data[${i}];
 	`)}
 		
 	//corresponding object stuff in repositionEntitiesOnLayer
@@ -1797,6 +1803,7 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 
 	let fn = `	
 		let replace = this.replacement;
+		let state = globalThis.state;
 
 		if (replace === null) {
 			return false;
@@ -1807,16 +1814,16 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 
 		// Using IMPORT_COMPILE_TIME_ARRAY should make the following three declarations faster,
 		// but it really slows down the compiler.
-		const objectsSet = _o1;	
+		const objectsSet = globalThis._o1;	
 		${UNROLL("objectsSet = replace.objectsSet", OBJECT_SIZE)}
 	
-		const objectsClear = _o2;
+		const objectsClear = globalThis._o2;
 		${UNROLL("objectsClear = replace.objectsClear", OBJECT_SIZE)}
 
-		const movementsSet = _m1;
+		const movementsSet = globalThis._m1;
 		${UNROLL("movementsSet = replace.movementsSet", MOVEMENT_SIZE)}
 		
-		const movementsClear = _m2;
+		const movementsClear = globalThis._m2;
 		
 		${FOR(0,MOVEMENT_SIZE,i=>
 			`movementsClear.data[${i}] = ${this.replacement.movementsClear.data[i] | this.replacement.movementsLayerMask.data[i]};\n`
@@ -1851,16 +1858,16 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 		
 
 
-		const oldCellMask = _o3;
+		const oldCellMask = globalThis._o3;
 		${LEVEL_GET_CELL_INTO("level", "currentIndex", "oldCellMask", OBJECT_SIZE)}
 
-		const curCellMask = _o2_5;
+		const curCellMask = globalThis._o2_5;
 		${FOR(0, OBJECT_SIZE,i=>`
 			curCellMask.data[${i}] = (oldCellMask.data[${i}] & (~objectsClear.data[${i}])) | objectsSet.data[${i}];
 		`)}
 
 		const oldMovementMask = level.getMovements(currentIndex);
-		const curMovementMask = _m3;
+		const curMovementMask = globalThis._m3;
 		${FOR(0, MOVEMENT_SIZE, i => `
 			curMovementMask.data[${i}] = (oldMovementMask.data[${i}] & (~movementsClear.data[${i}])) | movementsSet.data[${i}]
 		`)}
@@ -1901,15 +1908,15 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 			level.rigidMovementAppliedMask[currentIndex] = curRigidMovementAppliedMask;
 		}
 
-		const created = _o4;
+		const created = globalThis._o4;
 		${UNROLL("created = curCellMask", OBJECT_SIZE)}
 		${UNROLL("created &= ~oldCellMask", OBJECT_SIZE)}
-		${UNROLL("sfxCreateMask |= created", OBJECT_SIZE)}
+		${UNROLL("globalThis.sfxCreateMask |= created", OBJECT_SIZE)}
 		
-		const destroyed = _o5;
+		const destroyed = globalThis._o5;
 		${UNROLL("destroyed = oldCellMask", OBJECT_SIZE)}
 		${UNROLL("destroyed &= ~curCellMask", OBJECT_SIZE)}
-		${UNROLL("sfxDestroyMask |= destroyed", OBJECT_SIZE)}
+		${UNROLL("globalThis.sfxDestroyMask |= destroyed", OBJECT_SIZE)}
 
 		${LEVEL_SET_CELL("level", "currentIndex", "curCellMask", OBJECT_SIZE)}
 		${LEVEL_SET_MOVEMENTS( "currentIndex", "curMovementMask", MOVEMENT_SIZE)}
@@ -2305,7 +2312,7 @@ Rule.prototype.generateApplyAt = function (patterns, ellipsisCount, OBJECT_SIZE,
 	}
 	)}
 
-	if (verbose_logging && result){
+	if (globalThis.verbose_logging && result){
 		let ruleDirection = dirMaskName[this.direction];
 		if (!this.directional()){
 			ruleDirection="";
@@ -2576,14 +2583,14 @@ function generate_resolveMovements(OBJECT_SIZE, MOVEMENT_SIZE,state) {
 		while(moved){
 			moved=false;
 			for (let i=0;i<level.n_tiles;i++) {
-				moved = state.repositionEntitiesAtCell(level,i) || moved;
+				moved = globalThis.state.repositionEntitiesAtCell(level,i) || moved;
 			}
 		}
 		let doUndo=false;
 	
 		//Search for any rigidly-caused movements remaining
 		for (let i=0;i<level.n_tiles;i++) {
-			let cellMask = level.getCellInto(i,_o6);
+			let cellMask = level.getCellInto(i,globalThis._o6);
 			let movementMask = level.getMovements(i);
 			if (${IS_NONZERO("movementMask", MOVEMENT_SIZE)}) {
 
@@ -2601,7 +2608,7 @@ function generate_resolveMovements(OBJECT_SIZE, MOVEMENT_SIZE,state) {
 								let rigidGroupIndexMask = level.rigidGroupIndexMask[i];
 								let rigidGroupIndex = ${GETSHIFTOR("rigidGroupIndexMask", 0x1f, 5*j)};
 								rigidGroupIndex--;//group indices start at zero, but are incremented for storing in the bitfield
-								let groupIndex = state.rigidGroupIndex_to_GroupIndex[rigidGroupIndex];
+								let groupIndex = globalThis.state.rigidGroupIndex_to_GroupIndex[rigidGroupIndex];
 								if (bannedGroup[groupIndex]!==true){
 									bannedGroup[groupIndex]=true
 									doUndo=true;
@@ -2625,6 +2632,7 @@ function generate_resolveMovements(OBJECT_SIZE, MOVEMENT_SIZE,state) {
 				}
 			}
 
+			const STRIDE_MOV = globalThis.STRIDE_MOV;
 			for (let j=0;j<STRIDE_MOV;j++) {
 				level.movements[j+i*STRIDE_MOV]=0;
 			}
@@ -3171,6 +3179,7 @@ Rule.prototype.generateFindMatchesFunction = function () {
 	fn += `if (${NOT_BITS_SET_IN_ARRAY("this.ruleMask", "level.mapCellContents.data", STRIDE_OBJ)}) return [];\n`;
 	fn += 'const d = level.delta_index(this.direction);\n';
 	fn += 'const matches = [];\n';
+	fn += 'const state = globalThis.state;\n';
 
 	// Unroll the pattern matching loop
 	for (let i = 0; i < this.patterns.length; i++) {
