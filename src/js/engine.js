@@ -1329,6 +1329,7 @@ let dirMaskName = {
 
 let seedsToPlay_CanMove = [];
 let seedsToPlay_CantMove = [];
+let movementDeltas = [];		// 每次交互后的增量移动
 
 function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 	// 在resolve阶段调用，尝试对positionIndex位置的layer层进行移动，方向是dirMask
@@ -1357,8 +1358,6 @@ function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 		return false;
 	}
 
-	// TODO: 在这里获取所有即将移动的格子
-	
 	// 声音规则会按照层级拆分，物体有交集 + 层级移动有交集，可以断定声音规则命中
 	for (let i = 0; i < state.sfx_MovementMasks[layer].length; i++) {
 		let o = state.sfx_MovementMasks[layer][i];
@@ -1370,6 +1369,11 @@ function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 				seedsToPlay_CanMove.push(o.seed);
 			}
 		}
+	}
+
+	// 搜集移动信息。注意rigid undo时要清空
+	if (movementDeltas !== undefined) {
+		movementDeltas.push([positionIndex, layer, dirMask, targetIndex]);
 	}
 
 	let movingEntities = sourceMask.clone();
@@ -2697,6 +2701,7 @@ function processInput(dir, dontDoWin, dontModify) {
 	let bannedGroup = [];
 	level.commandQueue = [];
 	level.commandQueueSourceRules = [];
+	movementDeltas.length = 0;
 	let rigidloop = false;
 	const startState = {
 		objects: new Int32Array(level.objects),
@@ -2750,6 +2755,7 @@ function processInput(dir, dontDoWin, dontModify) {
 			sfxCreateMask.setZero();
 			sfxDestroyMask.setZero();
 			seedsToPlay_CanMove.length = 0;
+			movementDeltas.length = 0;
 
 			if (verbose_logging && rigidloop && i > 0) {
 				consolePrint('Relooping through rules because of rigid.');
