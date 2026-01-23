@@ -3234,6 +3234,7 @@ defineGlobalThisProperty('_movementVecs', () => _movementVecs, (val) => { _movem
 defineGlobalThisProperty('_movementVecIndex', () => _movementVecIndex, (val) => { _movementVecIndex = val; });
 defineGlobalThisProperty('STRIDE_MOV', () => STRIDE_MOV, (val) => { STRIDE_MOV = val; });
 defineGlobalThisProperty('state', () => state, (val) => { state = val; });
+defineGlobalThisProperty('level', () => level, (val) => { level = val; });
 defineGlobalThisProperty('_o1', () => _o1, (val) => { _o1 = val; });
 defineGlobalThisProperty('_o2', () => _o2, (val) => { _o2 = val; });
 defineGlobalThisProperty('_o2_5', () => _o2_5, (val) => { _o2_5 = val; });
