@@ -2650,8 +2650,8 @@ function generate_resolveMovements(OBJECT_SIZE, MOVEMENT_SIZE,state) {
 		
 					if (${ANY_BITS_IN_COMMON("cellMask", "objectMask", OBJECT_SIZE)} 
 					&& ${ANY_BITS_IN_COMMON("o.directionMask","movementMask", MOVEMENT_SIZE)} 
-					&& seedsToPlay_CantMove.indexOf(o.seed)===-1) {
-						seedsToPlay_CantMove.push(o.seed);
+					&& globalThis.seedsToPlay_CantMove.indexOf(o.seed)===-1) {
+						globalThis.seedsToPlay_CantMove.push(o.seed);
 					}
 				}
 			}
@@ -3286,4 +3286,6 @@ defineGlobalThisProperty('_m2', () => _m2);
 defineGlobalThisProperty('_m3', () => _m3);
 defineGlobalThisProperty('sfxCreateMask', () => sfxCreateMask);
 defineGlobalThisProperty('sfxDestroyMask', () => sfxDestroyMask);
+// defineGlobalThisProperty('seedsToPlay_CanMove', () => seedsToPlay_CanMove);
+defineGlobalThisProperty('seedsToPlay_CantMove', () => seedsToPlay_CantMove);
 defineGlobalThisProperty('verbose_logging', () => verbose_logging);
