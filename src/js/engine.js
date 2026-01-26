@@ -1329,7 +1329,43 @@ let dirMaskName = {
 
 let seedsToPlay_CanMove = [];
 let seedsToPlay_CantMove = [];
-let movementDeltas = [];		// 每次交互后的增量移动
+
+function LevelDelta() {
+	this.movements = [];
+	this.creates = [];
+	this.destroys = [];
+}
+
+LevelDelta.prototype.reset = function() {
+	this.movements.length = 0;
+	for (const c of this.creates) {
+		bitVecPool.release(c[1]);
+	}
+	this.creates.length = 0;
+
+	for (const d of this.destroys) {
+		bitVecPool.release(d[1]);
+	}
+	this.destroys.length = 0;
+}
+
+LevelDelta.prototype.recordMovement = function(movement) {
+	this.movements.push(movement);
+}
+
+LevelDelta.prototype.recordCreate = function(positionIndex, mask) {
+	const vec = bitVecPool.aquire(mask.data.length);
+	mask.cloneInto(vec);
+	this.creates.push([positionIndex, vec]);
+}
+
+LevelDelta.prototype.recordDestroy = function(positionIndex, mask) {
+	const vec = bitVecPool.aquire(mask.data.length);
+	mask.cloneInto(vec);
+	this.destroys.push([positionIndex, vec]);
+}
+
+const levelDelta = new LevelDelta;
 
 function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 	// 在resolve阶段调用，尝试对positionIndex位置的layer层进行移动，方向是dirMask
@@ -1372,9 +1408,7 @@ function repositionEntitiesOnLayer(positionIndex, layer, dirMask) {
 	}
 
 	// 搜集移动信息。注意rigid undo时要清空
-	if (movementDeltas !== undefined) {
-		movementDeltas.push([positionIndex, layer, dirMask, targetIndex]);
-	}
+	levelDelta.recordMovement([positionIndex, layer, dirMask, targetIndex]);
 
 	let movingEntities = sourceMask.clone();
 	sourceMask.iclear(layerMask);		// 当前层级有关的对象全部清除（按照同层互斥设定，其实最多只清除1个）
@@ -1910,11 +1944,15 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 		${UNROLL("created = curCellMask", OBJECT_SIZE)}
 		${UNROLL("created &= ~oldCellMask", OBJECT_SIZE)}
 		${UNROLL("globalThis.sfxCreateMask |= created", OBJECT_SIZE)}
+		if (!created.iszero()) 
+			globalThis.levelDelta.recordCreate(currentIndex, created);
 		
 		const destroyed = globalThis._o5;
 		${UNROLL("destroyed = oldCellMask", OBJECT_SIZE)}
 		${UNROLL("destroyed &= ~curCellMask", OBJECT_SIZE)}
 		${UNROLL("globalThis.sfxDestroyMask |= destroyed", OBJECT_SIZE)}
+		if (!destroyed.iszero())
+			globalThis.levelDelta.recordDestroy(currentIndex, destroyed);
 
 		${LEVEL_SET_CELL("level", "currentIndex", "curCellMask", OBJECT_SIZE)}
 		${LEVEL_SET_MOVEMENTS( "currentIndex", "curMovementMask", MOVEMENT_SIZE)}
@@ -2701,7 +2739,7 @@ function processInput(dir, dontDoWin, dontModify) {
 	let bannedGroup = [];
 	level.commandQueue = [];
 	level.commandQueueSourceRules = [];
-	movementDeltas.length = 0;
+	levelDelta.reset();
 	let rigidloop = false;
 	const startState = {
 		objects: new Int32Array(level.objects),
@@ -2755,7 +2793,7 @@ function processInput(dir, dontDoWin, dontModify) {
 			sfxCreateMask.setZero();
 			sfxDestroyMask.setZero();
 			seedsToPlay_CanMove.length = 0;
-			movementDeltas.length = 0;
+			levelDelta.reset();
 
 			if (verbose_logging && rigidloop && i > 0) {
 				consolePrint('Relooping through rules because of rigid.');
@@ -3236,27 +3274,28 @@ function defineGlobalThisProperty(name, getValue, setValue) {
 }
 
 // Define all global properties
-defineGlobalThisProperty('_movementVecs', () => _movementVecs, (val) => { _movementVecs = val; });
+defineGlobalThisProperty('_movementVecs', () => _movementVecs);
 defineGlobalThisProperty('_movementVecIndex', () => _movementVecIndex, (val) => { _movementVecIndex = val; });
-defineGlobalThisProperty('STRIDE_MOV', () => STRIDE_MOV, (val) => { STRIDE_MOV = val; });
-defineGlobalThisProperty('state', () => state, (val) => { state = val; });
-defineGlobalThisProperty('level', () => level, (val) => { level = val; });
-defineGlobalThisProperty('_o1', () => _o1, (val) => { _o1 = val; });
-defineGlobalThisProperty('_o2', () => _o2, (val) => { _o2 = val; });
-defineGlobalThisProperty('_o2_5', () => _o2_5, (val) => { _o2_5 = val; });
-defineGlobalThisProperty('_o3', () => _o3, (val) => { _o3 = val; });
-defineGlobalThisProperty('_o4', () => _o4, (val) => { _o4 = val; });
-defineGlobalThisProperty('_o5', () => _o5, (val) => { _o5 = val; });
-defineGlobalThisProperty('_o6', () => _o6, (val) => { _o6 = val; });
-defineGlobalThisProperty('_o7', () => _o7, (val) => { _o7 = val; });
-defineGlobalThisProperty('_o8', () => _o8, (val) => { _o8 = val; });
-defineGlobalThisProperty('_o9', () => _o9, (val) => { _o9 = val; });
-defineGlobalThisProperty('_o10', () => _o10, (val) => { _o10 = val; });
-defineGlobalThisProperty('_o11', () => _o11, (val) => { _o11 = val; });
-defineGlobalThisProperty('_o12', () => _o12, (val) => { _o12 = val; });
-defineGlobalThisProperty('_m1', () => _m1, (val) => { _m1 = val; });
-defineGlobalThisProperty('_m2', () => _m2, (val) => { _m2 = val; });
-defineGlobalThisProperty('_m3', () => _m3, (val) => { _m3 = val; });
-defineGlobalThisProperty('sfxCreateMask', () => sfxCreateMask, (val) => { sfxCreateMask = val; });
-defineGlobalThisProperty('sfxDestroyMask', () => sfxDestroyMask, (val) => { sfxDestroyMask = val; });
-defineGlobalThisProperty('verbose_logging', () => verbose_logging, (val) => { verbose_logging = val; });
+defineGlobalThisProperty('STRIDE_MOV', () => STRIDE_MOV);
+defineGlobalThisProperty('state', () => state);
+defineGlobalThisProperty('level', () => level);
+defineGlobalThisProperty('levelDelta', () => levelDelta);
+defineGlobalThisProperty('_o1', () => _o1);
+defineGlobalThisProperty('_o2', () => _o2);
+defineGlobalThisProperty('_o2_5', () => _o2_5);
+defineGlobalThisProperty('_o3', () => _o3);
+defineGlobalThisProperty('_o4', () => _o4);
+defineGlobalThisProperty('_o5', () => _o5);
+defineGlobalThisProperty('_o6', () => _o6);
+defineGlobalThisProperty('_o7', () => _o7);
+defineGlobalThisProperty('_o8', () => _o8);
+defineGlobalThisProperty('_o9', () => _o9);
+defineGlobalThisProperty('_o10', () => _o10);
+defineGlobalThisProperty('_o11', () => _o11);
+defineGlobalThisProperty('_o12', () => _o12);
+defineGlobalThisProperty('_m1', () => _m1);
+defineGlobalThisProperty('_m2', () => _m2);
+defineGlobalThisProperty('_m3', () => _m3);
+defineGlobalThisProperty('sfxCreateMask', () => sfxCreateMask);
+defineGlobalThisProperty('sfxDestroyMask', () => sfxDestroyMask);
+defineGlobalThisProperty('verbose_logging', () => verbose_logging);

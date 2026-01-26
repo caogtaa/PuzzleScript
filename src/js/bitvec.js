@@ -345,3 +345,28 @@ function IMPORT_COMPILE_TIME_ARRAY(runtime,compiletime,array_size){
 	return result;
 }
 
+function BitVecPool() {
+	this.pools = [];	// pools[k] stores bitvecs of size k+1
+}
+
+BitVecPool.prototype.aquire = function(size) {
+	if (this.pools.length < size) {
+		while (this.pools.length < size) {
+			this.pools.push([]);
+		}
+	}
+
+	const pool = this.pools[size-1];
+	if (pool.length === 0) {
+		return new BitVec(size);
+	}
+
+	return pool.pop();
+}
+
+BitVecPool.prototype.release = function(vec) {
+	const size = vec.data.length;
+	this.pools[size-1].push(vec);
+}
+
+const bitVecPool = new BitVecPool();
