@@ -1333,9 +1333,13 @@ let seedsToPlay_CantMove = [];
 function LevelDelta() {
 	this.movements = [];
 	this.createDestroys = [];
+	this.mutable = true;
 }
 
 LevelDelta.prototype.reset = function() {
+	if (!this.mutable)
+		return;
+
 	this.movements.length = 0;
 	for (const c of this.createDestroys) {
 		bitVecPool.release(c[2]);
@@ -1344,13 +1348,23 @@ LevelDelta.prototype.reset = function() {
 }
 
 LevelDelta.prototype.recordMovement = function(movement) {
+	if (!this.mutable)
+		return;
+
 	this.movements.push(movement);
 }
 
 LevelDelta.prototype.recordCreateDestroy = function(isCreate, positionIndex, mask) {
+	if (!this.mutable)
+		return;
+
 	const vec = bitVecPool.aquire(mask.data.length);
 	mask.cloneInto(vec);
 	this.createDestroys.push([isCreate, positionIndex, vec]);
+}
+
+LevelDelta.prototype.setMutable = function(mutable) {
+	this.mutable = mutable;
 }
 
 const levelDelta = new LevelDelta;
@@ -2727,6 +2741,7 @@ function processInput(dir, dontDoWin, dontModify) {
 	let bannedGroup = [];
 	level.commandQueue = [];
 	level.commandQueueSourceRules = [];
+	levelDelta.setMutable(!dontModify);			// dry run模式下所有操作都被忽略（残留上一次的内容），直到被调用setMutable(true)
 	levelDelta.reset();
 	let rigidloop = false;
 	const startState = {
