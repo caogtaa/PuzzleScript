@@ -1332,37 +1332,25 @@ let seedsToPlay_CantMove = [];
 
 function LevelDelta() {
 	this.movements = [];
-	this.creates = [];
-	this.destroys = [];
+	this.createDestroys = [];
 }
 
 LevelDelta.prototype.reset = function() {
 	this.movements.length = 0;
-	for (const c of this.creates) {
-		bitVecPool.release(c[1]);
+	for (const c of this.createDestroys) {
+		bitVecPool.release(c[2]);
 	}
-	this.creates.length = 0;
-
-	for (const d of this.destroys) {
-		bitVecPool.release(d[1]);
-	}
-	this.destroys.length = 0;
+	this.createDestroys.length = 0;
 }
 
 LevelDelta.prototype.recordMovement = function(movement) {
 	this.movements.push(movement);
 }
 
-LevelDelta.prototype.recordCreate = function(positionIndex, mask) {
+LevelDelta.prototype.recordCreateDestroy = function(isCreate, positionIndex, mask) {
 	const vec = bitVecPool.aquire(mask.data.length);
 	mask.cloneInto(vec);
-	this.creates.push([positionIndex, vec]);
-}
-
-LevelDelta.prototype.recordDestroy = function(positionIndex, mask) {
-	const vec = bitVecPool.aquire(mask.data.length);
-	mask.cloneInto(vec);
-	this.destroys.push([positionIndex, vec]);
+	this.createDestroys.push([isCreate, positionIndex, vec]);
 }
 
 const levelDelta = new LevelDelta;
@@ -1945,14 +1933,14 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 		${UNROLL("created &= ~oldCellMask", OBJECT_SIZE)}
 		${UNROLL("globalThis.sfxCreateMask |= created", OBJECT_SIZE)}
 		if (!created.iszero()) 
-			globalThis.levelDelta.recordCreate(currentIndex, created);
+			globalThis.levelDelta.recordCreateDestroy(true, currentIndex, created);
 		
 		const destroyed = globalThis._o5;
 		${UNROLL("destroyed = oldCellMask", OBJECT_SIZE)}
 		${UNROLL("destroyed &= ~curCellMask", OBJECT_SIZE)}
 		${UNROLL("globalThis.sfxDestroyMask |= destroyed", OBJECT_SIZE)}
 		if (!destroyed.iszero())
-			globalThis.levelDelta.recordDestroy(currentIndex, destroyed);
+			globalThis.levelDelta.recordCreateDestroy(false, currentIndex, destroyed);
 
 		${LEVEL_SET_CELL("level", "currentIndex", "curCellMask", OBJECT_SIZE)}
 		${LEVEL_SET_MOVEMENTS( "currentIndex", "curMovementMask", MOVEMENT_SIZE)}
