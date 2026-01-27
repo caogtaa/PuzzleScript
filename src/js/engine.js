@@ -1837,7 +1837,8 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 
 	let fn = `	
 		let replace = this.replacement;
-		let state = globalThis.state;
+		const state = globalThis.state;
+		const BitVec = globalThis.BitVec;
 
 		if (replace === null) {
 			return false;
@@ -3304,3 +3305,4 @@ defineGlobalThisProperty('sfxDestroyMask', () => sfxDestroyMask);
 // defineGlobalThisProperty('seedsToPlay_CanMove', () => seedsToPlay_CanMove);
 defineGlobalThisProperty('seedsToPlay_CantMove', () => seedsToPlay_CantMove);
 defineGlobalThisProperty('verbose_logging', () => verbose_logging);
+defineGlobalThisProperty('BitVec', () => BitVec);
