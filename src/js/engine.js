@@ -1176,6 +1176,8 @@ function DoUndo(force, ignoreDuplicates) {
 		consolePrint("--- undoing ---", true);
 	}
 
+	// 原版这里没有清空sfxCreateMask等声音播放相关变量。不过cancel流程不走PlaySounds，所以不影响
+	levelDelta.reset();
 	if (ignoreDuplicates) {
 		while (backupDiffers() === false) {
 			backups.pop();
