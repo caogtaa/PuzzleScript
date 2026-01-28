@@ -1130,6 +1130,7 @@ function DoRestart(force) {
 		DoUndo(force, true);
 	}
 	restarting = true;
+	levelDelta.recordRestart();
 	if (force !== true) {
 		addUndoState(backupLevel());
 	}
@@ -1177,7 +1178,7 @@ function DoUndo(force, ignoreDuplicates) {
 	}
 
 	// 原版这里没有清空sfxCreateMask等声音播放相关变量。不过cancel流程不走PlaySounds，所以不影响
-	levelDelta.reset();
+	levelDelta.recordUndo();
 	if (ignoreDuplicates) {
 		while (backupDiffers() === false) {
 			backups.pop();
@@ -1336,6 +1337,8 @@ function LevelDelta() {
 	this.movements = [];
 	this.createDestroys = [];
 	this.mutable = true;
+	this.hasUndo = false;
+	this.hasRestart = false;
 }
 
 LevelDelta.prototype.reset = function() {
@@ -1347,6 +1350,8 @@ LevelDelta.prototype.reset = function() {
 		bitVecPool.release(c[2]);
 	}
 	this.createDestroys.length = 0;
+	this.hasUndo = false;
+	this.hasRestart = false;
 }
 
 LevelDelta.prototype.recordMovement = function(movement) {
@@ -1363,6 +1368,20 @@ LevelDelta.prototype.recordCreateDestroy = function(isCreate, positionIndex, mas
 	const vec = bitVecPool.aquire(mask.data.length);
 	mask.cloneInto(vec);
 	this.createDestroys.push([isCreate, positionIndex, vec]);
+}
+
+LevelDelta.prototype.recordUndo = function() {
+	if (!this.mutable)
+		return;
+
+	this.hasUndo = true;
+}
+
+LevelDelta.prototype.recordRestart = function() {
+	if (!this.mutable)
+		return;
+
+	this.hasRestart = true;
 }
 
 LevelDelta.prototype.setMutable = function(mutable) {
