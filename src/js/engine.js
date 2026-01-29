@@ -1334,11 +1334,14 @@ let seedsToPlay_CanMove = [];
 let seedsToPlay_CantMove = [];
 
 function LevelDelta() {
+	// create/destroy分normal/late rules，PuzzleScript不支持late movements
 	this.movements = [];
 	this.createDestroys = [];
+	this.lateCreateDestroys = [];
 	this.mutable = true;
 	this.hasUndo = false;
 	this.hasRestart = false;
+	this.rulePhase = 0;		// 0: normal rules; 1: late rules
 }
 
 LevelDelta.prototype.reset = function() {
@@ -1350,8 +1353,10 @@ LevelDelta.prototype.reset = function() {
 		bitVecPool.release(c[2]);
 	}
 	this.createDestroys.length = 0;
+	this.lateCreateDestroys.length = 0;
 	this.hasUndo = false;
 	this.hasRestart = false;
+	this.rulePhase = 0;
 }
 
 LevelDelta.prototype.recordMovement = function(movement) {
@@ -1364,10 +1369,14 @@ LevelDelta.prototype.recordMovement = function(movement) {
 LevelDelta.prototype.recordCreateDestroy = function(isCreate, positionIndex, mask) {
 	if (!this.mutable)
 		return;
-
+	
 	const vec = bitVecPool.aquire(mask.data.length);
 	mask.cloneInto(vec);
-	this.createDestroys.push([isCreate, positionIndex, vec]);
+	if (this.rulePhase === 0) {
+		this.createDestroys.push([isCreate, positionIndex, vec]);
+	} else {
+		this.lateCreateDestroys.push([isCreate, positionIndex, vec]);
+	}
 }
 
 LevelDelta.prototype.recordUndo = function() {
@@ -1386,6 +1395,10 @@ LevelDelta.prototype.recordRestart = function() {
 
 LevelDelta.prototype.setMutable = function(mutable) {
 	this.mutable = mutable;
+}
+
+LevelDelta.prototype.setRulePhase = function(phase) {
+	this.rulePhase = phase;
 }
 
 const levelDelta = new LevelDelta;
@@ -2789,6 +2802,7 @@ function processInput(dir, dontDoWin, dontModify) {
 		rigidloop = false;
 		i++;
 
+		levelDelta.setRulePhase(0);
 		//everything outside of these two lines in this loop is rigid-body nonsense
 		applyRules(state.rules, state.loopPoint, bannedGroup);
 		let shouldUndo = state.resolveMovements(level, bannedGroup);
@@ -2839,6 +2853,8 @@ function processInput(dir, dontDoWin, dontModify) {
 					consolePrint('Applying late rules');
 				}
 			}
+			
+			levelDelta.setRulePhase(1);
 			applyRules(state.lateRules, state.lateLoopPoint);
 		}
 	} while (i < 50 && rigidloop);	// 如果不是刚体解体回滚，这里会立刻结束循环
