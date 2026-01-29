@@ -1129,8 +1129,8 @@ function DoRestart(force) {
 	if (againing) {
 		DoUndo(force, true);
 	}
-	restarting = true;
 	levelDelta.recordRestart();
+	restarting = true;
 	if (force !== true) {
 		addUndoState(backupLevel());
 	}
@@ -3155,6 +3155,7 @@ function DoWin() {
 
 function nextLevel() {
 	againing = false;
+	levelDelta.reset();
 	messagetext = "";
 	if (state && state.levels && (curlevel > state.levels.length)) {
 		curlevel = state.levels.length - 1;
