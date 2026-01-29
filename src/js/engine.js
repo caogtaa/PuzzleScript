@@ -1860,6 +1860,7 @@ CellPattern.prototype.generateReplaceFunction = function (OBJECT_SIZE, MOVEMENT_
 		let replace = this.replacement;
 		const state = globalThis.state;
 		const BitVec = globalThis.BitVec;
+		const RandomGen = globalThis.RandomGen;
 
 		if (replace === null) {
 			return false;
@@ -3328,3 +3329,4 @@ defineGlobalThisProperty('sfxDestroyMask', () => sfxDestroyMask);
 defineGlobalThisProperty('seedsToPlay_CantMove', () => seedsToPlay_CantMove);
 defineGlobalThisProperty('verbose_logging', () => verbose_logging);
 defineGlobalThisProperty('BitVec', () => BitVec);
+defineGlobalThisProperty('RandomGen', () => RandomGen);
