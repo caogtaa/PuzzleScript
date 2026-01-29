@@ -1352,6 +1352,9 @@ LevelDelta.prototype.reset = function() {
 	for (const c of this.createDestroys) {
 		bitVecPool.release(c[2]);
 	}
+	for (const c of this.lateCreateDestroys) {
+		bitVecPool.release(c[2]);
+	}
 	this.createDestroys.length = 0;
 	this.lateCreateDestroys.length = 0;
 	this.hasUndo = false;
