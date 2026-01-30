@@ -361,6 +361,8 @@ function redraw() {
                 var px = (playerPosition / (curlevel.height)) | 0;
                 var py = (playerPosition % curlevel.height) | 0;
 
+                // screenwidth/screenheight是metadata指定里的单屏尺寸
+                // 先除后乘对其到单屏
                 var screenx = (px / screenwidth) | 0;
                 var screeny = (py / screenheight) | 0;
                 mini = screenx * screenwidth;
@@ -370,6 +372,7 @@ function redraw() {
 
                 oldflickscreendat = [mini, minj, maxi, maxj];
             } else if (oldflickscreendat.length > 0) {
+                // 如果player不见了，使用上一次的camera位置
                 mini = oldflickscreendat[0];
                 minj = oldflickscreendat[1];
                 maxi = oldflickscreendat[2];
