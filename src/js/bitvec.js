@@ -270,6 +270,29 @@ BitVec.prototype.prettyPrint = function() {
 	return result;
 }
 
+const BitPositionLookup = 
+	[0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
+	31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9];
+
+BitVec.prototype.getBitIndexesInto = function(outIndexes) {
+	// Use de Bruijn algorithm to get all set bit indexes
+	// Because BitVec is sparse, MAYBE this is more efficient than checking each bit one by one
+	outIndexes ??= [];
+	outIndexes.length = 0;
+
+	for (let i = 0; i < this.data.length; ++i) {
+		let v = this.data[i];
+		const baseIndex = i << 5; // *32
+		while (v != 0) {
+			const bitIndex = BitPositionLookup[(((v & -v) * 0x077CB531)) >>> 27];
+			outIndexes.push(baseIndex + bitIndex);
+			v &= (v-1); // clear lowest bit
+		}
+	}
+
+	return outIndexes;
+}
+
 function ANY_BITS_IN_COMMON(tok, arr, array_size) {
 	if (array_size === 0) {
 		return "false";

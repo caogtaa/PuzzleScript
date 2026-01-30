@@ -1336,12 +1336,14 @@ let seedsToPlay_CantMove = [];
 function LevelDelta() {
 	// create/destroy分normal/late rules，PuzzleScript不支持late movements
 	this.movements = [];
-	this.createDestroys = [];
-	this.lateCreateDestroys = [];
 	this.mutable = true;
 	this.hasUndo = false;
 	this.hasRestart = false;
 	this.rulePhase = 0;		// 0: normal rules; 1: late rules
+
+	// cache for merging redundent create/destroy
+	this.mergeCache = {};
+	this.lateMergeCache = {};
 }
 
 LevelDelta.prototype.reset = function() {
@@ -1349,17 +1351,12 @@ LevelDelta.prototype.reset = function() {
 		return;
 
 	this.movements.length = 0;
-	for (const c of this.createDestroys) {
-		bitVecPool.release(c[2]);
-	}
-	for (const c of this.lateCreateDestroys) {
-		bitVecPool.release(c[2]);
-	}
-	this.createDestroys.length = 0;
-	this.lateCreateDestroys.length = 0;
 	this.hasUndo = false;
 	this.hasRestart = false;
 	this.rulePhase = 0;
+
+	this.mergeCache = {};
+	this.lateMergeCache = {};
 }
 
 LevelDelta.prototype.recordMovement = function(movement) {
@@ -1369,16 +1366,33 @@ LevelDelta.prototype.recordMovement = function(movement) {
 	this.movements.push(movement);
 }
 
+let tmpIds = [];
 LevelDelta.prototype.recordCreateDestroy = function(isCreate, positionIndex, mask) {
 	if (!this.mutable)
 		return;
 	
-	const vec = bitVecPool.aquire(mask.data.length);
-	mask.cloneInto(vec);
 	if (this.rulePhase === 0) {
-		this.createDestroys.push([isCreate, positionIndex, vec]);
+		this.mergeCreateDestroyInto(this.mergeCache, isCreate, positionIndex, mask);
 	} else {
-		this.lateCreateDestroys.push([isCreate, positionIndex, vec]);
+		this.mergeCreateDestroyInto(this.lateMergeCache, isCreate, positionIndex, mask);
+	}
+}
+
+LevelDelta.prototype.mergeCreateDestroyInto = function(cache, isCreate, positionIndex, mask) {
+	const ids = mask.getBitIndexesInto(tmpIds);
+	for (const id of ids) {
+		// TODO: ignore id if it's transparent
+		let statusDict = cache[id];
+		if (statusDict === undefined) {
+			statusDict = {};
+			cache[id] = statusDict;
+		}
+
+		let value = statusDict[positionIndex];
+		if (value === undefined)
+			value = 0;
+		value += (isCreate ? 1 : -1);
+		statusDict[positionIndex] = value;
 	}
 }
 
