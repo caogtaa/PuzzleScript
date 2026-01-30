@@ -404,7 +404,7 @@ function redraw() {
                 var posIndex = j + i * curlevel.height;
                 var posMask = curlevel.getCellInto(posIndex, _o12);
                 for (var k = 0; k < state.objectCount; k++) {
-                    if (posMask.get(k) != 0) {
+                    if (!state.isTransparent[k] && posMask.get(k) != 0) {
                         var sprite = spriteimages[k];
                         ctx.drawImage(sprite, xoffset + (i - mini) * cellwidth, yoffset + (j - minj) * cellheight);
                     }

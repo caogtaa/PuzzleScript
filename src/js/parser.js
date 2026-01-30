@@ -1592,6 +1592,7 @@ let codeMirrorFn = function () {
                     permanently useful
                 */
                 objects: {},
+                isTransparent: [],  // whether all pixels in spritematrix are transparent, indexed by object id
 
                 /*
                     for parsing

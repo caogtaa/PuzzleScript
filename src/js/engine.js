@@ -1381,7 +1381,9 @@ LevelDelta.prototype.recordCreateDestroy = function(isCreate, positionIndex, mas
 LevelDelta.prototype.mergeCreateDestroyInto = function(cache, isCreate, positionIndex, mask) {
 	const ids = mask.getBitIndexesInto(tmpIds);
 	for (const id of ids) {
-		// TODO: ignore id if it's transparent
+		if (state.isTransparent[id])
+			continue;
+
 		let statusDict = cache[id];
 		if (statusDict === undefined) {
 			statusDict = {};

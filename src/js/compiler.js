@@ -40,6 +40,20 @@ function generateSpriteMatrix(dat) {
     return result;
 }
 
+function isSpriteMatrixTransparent(spriteMatrix, colors) {
+    for (let i = 0; i < spriteMatrix.length; i++) {
+        const row = spriteMatrix[i];
+        for (let j = 0; j < row.length; j++) {
+            let colorIndex = row[j];
+            if (colorIndex >= 0 && colors[colorIndex] !== "transparent") {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 let debugMode;
 let colorPalette;
 
@@ -64,6 +78,7 @@ function generateExtraMembers(state) {
 
     //set object count
     state.objectCount = idcount;
+    state.isTransparent.length = idcount;
 
     //calculate blank mask template
     let layerCount = state.collisionLayers.length;
@@ -159,7 +174,8 @@ function generateExtraMembers(state) {
         let mask = blankMask.concat([]);
         mask[o.layer] = o.id;
         glyphDict[n] = mask;
-        glyphOrder.push([o.lineNumber, n]);    
+        glyphOrder.push([o.lineNumber, n]);
+        state.isTransparent[o.id] = isSpriteMatrixTransparent(o.spritematrix, o.colors);
     }
 
     let added = true;
